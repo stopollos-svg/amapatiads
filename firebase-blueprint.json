@@ -1,0 +1,325 @@
+{
+  "entities": {
+    "PublisherApp": {
+      "title": "PublisherApp",
+      "description": "An Android or iOS application published under the developer domain and monetized via AdMob.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "bundleId": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 140,
+          "pattern": "^[a-zA-Z0-9._\\-]+$"
+        },
+        "platform": {
+          "type": "string",
+          "enum": ["Android", "iOS"]
+        },
+        "category": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 50
+        },
+        "storeUrl": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 400
+        },
+        "admobAppId": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 64
+        },
+        "publisherId": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 32,
+          "pattern": "^pub-[0-9]{16}$"
+        },
+        "appAdsStatus": {
+          "type": "string",
+          "enum": ["verified", "pending_crawl", "action_required"]
+        },
+        "adUnitsCount": {
+          "type": "number"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 320
+        },
+        "accentKey": {
+          "type": "string",
+          "enum": ["emerald", "slate", "indigo", "amber"]
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["public", "private"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "name",
+        "bundleId",
+        "platform",
+        "category",
+        "storeUrl",
+        "admobAppId",
+        "publisherId",
+        "appAdsStatus",
+        "adUnitsCount",
+        "description",
+        "accentKey",
+        "visibility",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "PublisherSettings": {
+      "title": "PublisherSettings",
+      "description": "AdMob publisher credentials and app-ads.txt configuration owned by a single publisher account.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "publisherId": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 24,
+          "pattern": "^pub-[0-9]{16}$"
+        },
+        "tagId": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 32
+        },
+        "developerDomain": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 160
+        },
+        "appAdsLines": {
+          "type": "array"
+        },
+        "lastCrawlStatus": {
+          "type": "string",
+          "enum": ["verified", "pending_crawl", "error"]
+        },
+        "lastCrawlDomain": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "publisherId",
+        "tagId",
+        "developerDomain",
+        "appAdsLines",
+        "lastCrawlStatus",
+        "lastCrawlDomain",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "MfaConfig": {
+      "title": "MfaConfig",
+      "description": "TOTP Multi-Factor Authentication enrollment metadata and hashed recovery codes for a user.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "totpSecret": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128
+        },
+        "backupCodeHashes": {
+          "type": "array"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "enabled",
+        "totpSecret",
+        "backupCodeHashes",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "VerificationLog": {
+      "title": "VerificationLog",
+      "description": "Audit record of app-ads.txt domain crawls and AdMob API credential verification attempts.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "checkType": {
+          "type": "string",
+          "enum": ["app_ads_txt", "admob_api", "credential_syntax"]
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "status": {
+          "type": "string",
+          "enum": ["verified", "warning", "failed"]
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "httpStatus": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "checkType",
+        "target",
+        "status",
+        "summary",
+        "httpStatus",
+        "createdAt"
+      ]
+    },
+    "RevenueSnapshot": {
+      "title": "RevenueSnapshot",
+      "description": "Persisted AdMob revenue report snapshot synced from live AdMob API or imported CSV.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "source": {
+          "type": "string",
+          "enum": ["admob_api", "csv_import", "sample_preview"]
+        },
+        "publisherId": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 24,
+          "pattern": "^pub-[0-9]{16}$"
+        },
+        "currency": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 8
+        },
+        "dailyMetrics": {
+          "type": "array"
+        },
+        "appBreakdowns": {
+          "type": "array"
+        },
+        "formatBreakdowns": {
+          "type": "array"
+        },
+        "geoBreakdowns": {
+          "type": "array"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "source",
+        "publisherId",
+        "currency",
+        "dailyMetrics",
+        "appBreakdowns",
+        "formatBreakdowns",
+        "geoBreakdowns",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/apps/{appId}": {
+      "schema": { "$ref": "#/entities/PublisherApp" },
+      "description": "Developer app portfolio items. Publicly readable when visibility is public; writable only by the owner."
+    },
+    "/publisherSettings/{userId}": {
+      "schema": { "$ref": "#/entities/PublisherSettings" },
+      "description": "Owner-only AdMob publisher configuration and app-ads.txt lines."
+    },
+    "/mfaConfig/{userId}": {
+      "schema": { "$ref": "#/entities/MfaConfig" },
+      "description": "Owner-only TOTP MFA secret and hashed recovery backup codes."
+    },
+    "/verificationLogs/{logId}": {
+      "schema": { "$ref": "#/entities/VerificationLog" },
+      "description": "Owner-only audit log of app-ads.txt and AdMob credential checks."
+    },
+    "/revenueSnapshots/{userId}": {
+      "schema": { "$ref": "#/entities/RevenueSnapshot" },
+      "description": "Owner-only AdMob revenue analytics snapshot from live API or CSV import."
+    }
+  }
+}

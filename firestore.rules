@@ -1,0 +1,248 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    function incoming() {
+      return request.resource.data;
+    }
+    function existing() {
+      return resource.data;
+    }
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+    function isOwner(userId) {
+      return isVerifiedUser() && request.auth.uid == userId;
+    }
+
+    // Validation Blueprint: PublisherApp
+    function isValidPublisherApp(data) {
+      return data.keys().hasAll([
+        'ownerId', 'name', 'bundleId', 'platform', 'category',
+        'storeUrl', 'admobAppId', 'publisherId', 'appAdsStatus',
+        'adUnitsCount', 'description', 'accentKey', 'visibility',
+        'createdAt', 'updatedAt'
+      ]) && data.keys().hasOnly([
+        'ownerId', 'name', 'bundleId', 'platform', 'category',
+        'storeUrl', 'admobAppId', 'publisherId', 'appAdsStatus',
+        'adUnitsCount', 'description', 'accentKey', 'visibility',
+        'createdAt', 'updatedAt'
+      ])
+      && data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 && data.ownerId == request.auth.uid
+      && data.name is string && data.name.size() >= 1 && data.name.size() <= 80
+      && data.bundleId is string && data.bundleId.size() >= 3 && data.bundleId.size() <= 140 && data.bundleId.matches('^[a-zA-Z0-9._\\-]+$')
+      && data.platform in ['Android', 'iOS']
+      && data.category is string && data.category.size() >= 1 && data.category.size() <= 50
+      && data.storeUrl is string && data.storeUrl.size() >= 8 && data.storeUrl.size() <= 400
+      && data.admobAppId is string && data.admobAppId.size() >= 10 && data.admobAppId.size() <= 64
+      && data.publisherId is string && data.publisherId.size() >= 20 && data.publisherId.size() <= 24 && data.publisherId.matches('^pub-[0-9]{16}$')
+      && data.appAdsStatus in ['verified', 'pending_crawl', 'action_required']
+      && data.adUnitsCount is number && data.adUnitsCount >= 0 && data.adUnitsCount <= 500
+      && data.description is string && data.description.size() <= 320
+      && data.accentKey in ['emerald', 'slate', 'indigo', 'amber']
+      && data.visibility in ['public', 'private']
+      && data.createdAt is timestamp
+      && data.updatedAt is timestamp;
+    }
+
+    // Validation Blueprint: PublisherSettings
+    function isValidPublisherSettings(data) {
+      return data.keys().hasAll([
+        'ownerId', 'publisherId', 'tagId', 'developerDomain',
+        'appAdsLines', 'lastCrawlStatus', 'lastCrawlDomain',
+        'createdAt', 'updatedAt'
+      ]) && data.keys().hasOnly([
+        'ownerId', 'publisherId', 'tagId', 'developerDomain',
+        'appAdsLines', 'lastCrawlStatus', 'lastCrawlDomain',
+        'createdAt', 'updatedAt'
+      ])
+      && data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 && data.ownerId == request.auth.uid
+      && data.publisherId is string && data.publisherId.size() >= 20 && data.publisherId.size() <= 24 && data.publisherId.matches('^pub-[0-9]{16}$')
+      && data.tagId is string && data.tagId.size() >= 8 && data.tagId.size() <= 32
+      && data.developerDomain is string && data.developerDomain.size() >= 3 && data.developerDomain.size() <= 160
+      && data.appAdsLines is list && data.appAdsLines.size() >= 1 && data.appAdsLines.size() <= 25 && data.appAdsLines[0] is string && data.appAdsLines[0].size() <= 200
+      && data.lastCrawlStatus in ['verified', 'pending_crawl', 'error']
+      && data.lastCrawlDomain is string && data.lastCrawlDomain.size() <= 160
+      && data.createdAt is timestamp
+      && data.updatedAt is timestamp;
+    }
+
+    // Validation Blueprint: MfaConfig
+    function isValidMfaConfig(data) {
+      return data.keys().hasAll([
+        'ownerId', 'enabled', 'totpSecret', 'backupCodeHashes', 'createdAt', 'updatedAt'
+      ]) && data.keys().hasOnly([
+        'ownerId', 'enabled', 'totpSecret', 'backupCodeHashes', 'createdAt', 'updatedAt'
+      ])
+      && data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 && data.ownerId == request.auth.uid
+      && data.enabled is bool
+      && data.totpSecret is string && data.totpSecret.size() >= 16 && data.totpSecret.size() <= 128
+      && data.backupCodeHashes is list && data.backupCodeHashes.size() <= 8
+      && (data.backupCodeHashes.size() == 0 || (data.backupCodeHashes[0] is string && data.backupCodeHashes[0].size() <= 128))
+      && data.createdAt is timestamp
+      && data.updatedAt is timestamp;
+    }
+
+    // Validation Blueprint: VerificationLog
+    function isValidVerificationLog(data) {
+      return data.keys().hasAll([
+        'ownerId', 'checkType', 'target', 'status', 'summary', 'httpStatus', 'createdAt'
+      ]) && data.keys().hasOnly([
+        'ownerId', 'checkType', 'target', 'status', 'summary', 'httpStatus', 'createdAt'
+      ])
+      && data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 && data.ownerId == request.auth.uid
+      && data.checkType in ['app_ads_txt', 'admob_api', 'credential_syntax']
+      && data.target is string && data.target.size() >= 1 && data.target.size() <= 200
+      && data.status in ['verified', 'warning', 'failed']
+      && data.summary is string && data.summary.size() >= 1 && data.summary.size() <= 300
+      && data.httpStatus is number && data.httpStatus >= 0 && data.httpStatus <= 599
+      && data.createdAt is timestamp;
+    }
+
+    // Validation Blueprint: RevenueSnapshot
+    function isValidRevenueSnapshot(data) {
+      return data.keys().hasAll([
+        'ownerId', 'source', 'publisherId', 'currency',
+        'dailyMetrics', 'appBreakdowns', 'formatBreakdowns', 'geoBreakdowns',
+        'createdAt', 'updatedAt'
+      ]) && data.keys().hasOnly([
+        'ownerId', 'source', 'publisherId', 'currency',
+        'dailyMetrics', 'appBreakdowns', 'formatBreakdowns', 'geoBreakdowns',
+        'createdAt', 'updatedAt'
+      ])
+      && data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 && data.ownerId == request.auth.uid
+      && data.source in ['admob_api', 'csv_import', 'sample_preview']
+      && data.publisherId is string && data.publisherId.size() >= 20 && data.publisherId.size() <= 24 && data.publisherId.matches('^pub-[0-9]{16}$')
+      && data.currency is string && data.currency.size() >= 3 && data.currency.size() <= 8
+      && data.dailyMetrics is list && data.dailyMetrics.size() <= 60
+      && (data.dailyMetrics.size() == 0 || data.dailyMetrics[0] is map)
+      && data.appBreakdowns is list && data.appBreakdowns.size() <= 25
+      && (data.appBreakdowns.size() == 0 || data.appBreakdowns[0] is map)
+      && data.formatBreakdowns is list && data.formatBreakdowns.size() <= 10
+      && (data.formatBreakdowns.size() == 0 || data.formatBreakdowns[0] is map)
+      && data.geoBreakdowns is list && data.geoBreakdowns.size() <= 15
+      && (data.geoBreakdowns.size() == 0 || data.geoBreakdowns[0] is map)
+      && data.createdAt is timestamp
+      && data.updatedAt is timestamp;
+    }
+
+    // Collection: apps
+    match /apps/{appId} {
+      allow get: if isValidId(appId) && (
+        existing().visibility == 'public' ||
+        (isVerifiedUser() && existing().ownerId == request.auth.uid)
+      );
+      allow list: if resource.data.visibility == 'public' || (
+        isVerifiedUser() && resource.data.ownerId == request.auth.uid
+      );
+      allow create: if isVerifiedUser()
+        && isValidId(appId)
+        && isValidPublisherApp(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser()
+        && isValidId(appId)
+        && existing().ownerId == request.auth.uid
+        && isValidPublisherApp(incoming())
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'name', 'bundleId', 'platform', 'category', 'storeUrl',
+          'admobAppId', 'publisherId', 'appAdsStatus', 'adUnitsCount',
+          'description', 'accentKey', 'visibility', 'updatedAt'
+        ]);
+      allow delete: if isVerifiedUser()
+        && isValidId(appId)
+        && existing().ownerId == request.auth.uid;
+    }
+
+    // Collection: publisherSettings
+    match /publisherSettings/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if false;
+      allow create: if isValidId(userId)
+        && isOwner(userId)
+        && isValidPublisherSettings(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId)
+        && isOwner(userId)
+        && isValidPublisherSettings(incoming())
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'publisherId', 'tagId', 'developerDomain', 'appAdsLines',
+          'lastCrawlStatus', 'lastCrawlDomain', 'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+
+    // Collection: mfaConfig
+    match /mfaConfig/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if false;
+      allow create: if isValidId(userId)
+        && isOwner(userId)
+        && isValidMfaConfig(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId)
+        && isOwner(userId)
+        && isValidMfaConfig(incoming())
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'enabled', 'totpSecret', 'backupCodeHashes', 'updatedAt'
+        ]);
+      allow delete: if isValidId(userId) && isOwner(userId);
+    }
+
+    // Collection: verificationLogs
+    match /verificationLogs/{logId} {
+      allow get: if isValidId(logId) && isVerifiedUser() && existing().ownerId == request.auth.uid;
+      allow list: if isVerifiedUser() && resource.data.ownerId == request.auth.uid;
+      allow create: if isVerifiedUser()
+        && isValidId(logId)
+        && isValidVerificationLog(incoming())
+        && incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if isValidId(logId) && isVerifiedUser() && existing().ownerId == request.auth.uid;
+    }
+
+    // Collection: revenueSnapshots
+    match /revenueSnapshots/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if false;
+      allow create: if isValidId(userId)
+        && isOwner(userId)
+        && isValidRevenueSnapshot(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId)
+        && isOwner(userId)
+        && isValidRevenueSnapshot(incoming())
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'source', 'publisherId', 'currency', 'dailyMetrics',
+          'appBreakdowns', 'formatBreakdowns', 'geoBreakdowns', 'updatedAt'
+        ]);
+      allow delete: if isValidId(userId) && isOwner(userId);
+    }
+  }
+}

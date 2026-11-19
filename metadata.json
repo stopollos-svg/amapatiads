@@ -1,0 +1,6 @@
+{
+  "name": "AdVerify Studio",
+  "description": "Developer portal for app-ads.txt hosting and verification, AdMob credential validation, multi-factor authenticated revenue analytics, and mobile app portfolio.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
